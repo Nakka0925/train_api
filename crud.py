@@ -35,14 +35,17 @@ def generate_image(acc,
     fig = plt.figure(figsize=figsize, dpi=dpi)
     ax = fig.add_axes([0, 0, 1, 1])
 
+    # プロット画像を直接メモリで渡す
     ax.plot(x_coo, y_coo, color=black, lw=1)
     
     format_graph_img(ax, min(x_coo), max(x_coo), min(y_coo), max(y_coo))
 
-    dst = f"/home/nakanishi/rails/genome-img-app/app/assets/images/{acc}.png"
-    plt.savefig(dst)
+    buf = io.BytesIO() # bufferを用意
+    plt.savefig(buf, format='png') # bufferに保持
+    enc = np.frombuffer(buf.getvalue()) # bufferからの読み出し
+    # plt.savefig(dst)
     plt.close()  
-    return fig
+    return enc
 
 
 
@@ -89,16 +92,14 @@ def predict():
 
     img_path = f"/home/nakanishi/rails/genome-img-app/app/assets/images/{acc[0]}.png"
 
-    # 未知のデータの場合
-    if not os.path.isfile(img_path):
-        with open("weight.json") as f:
-            weight = json.load(f)
-            fig = generate_image(acc[0], seq[0], weight)
-
+    with open("weight.json") as f:
+        weight = json.load(f)
+        fig = generate_image(acc[0], seq[0], weight)
+    peint(fig)
     ###train###
     model = tf.keras.models.load_model('saved_model/my_model')
     img = cv2.imread(img_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(fig, cv2.COLOR_BGR2GRAY)
     img = 1 - np.asarray(img, dtype=np.float16) / 255
     img = img.reshape(1,192,192,1)
     predictions = model.predict(img)

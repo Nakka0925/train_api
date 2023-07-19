@@ -43,9 +43,11 @@ def generate_image(acc,
     buf = io.BytesIO() # bufferを用意
     plt.savefig(buf, format='png') # bufferに保持
     enc = np.frombuffer(buf.getvalue()) # bufferからの読み出し
+    dst = cv2.imdecode(enc, 1) # デコード
+    dst = dst[:,:,::-1] # BGR->RGB
     # plt.savefig(dst)
     plt.close()  
-    return enc
+    return dst
 
 
 
@@ -95,7 +97,6 @@ def predict():
     with open("weight.json") as f:
         weight = json.load(f)
         fig = generate_image(acc[0], seq[0], weight)
-    peint(fig)
     ###train###
     model = tf.keras.models.load_model('saved_model/my_model')
     img = cv2.imread(img_path)

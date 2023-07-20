@@ -9,6 +9,7 @@ from Bio import SeqIO, Seq
 import gbk_utils
 import tensorflow as tf
 import cv2
+import io
 
 app = Flask(__name__)
 
@@ -42,13 +43,14 @@ def generate_image(acc,
 
     buf = io.BytesIO() # bufferを用意
     plt.savefig(buf, format='png') # bufferに保持
-    enc = np.frombuffer(buf.getvalue()) # bufferからの読み出し
+    enc = np.frombuffer(buf.getvalue(),dtype=np.uint8) # bufferからの読み出し
     dst = cv2.imdecode(enc, 1) # デコード
     dst = dst[:,:,::-1] # BGR->RGB
+    # dst = "/home/nakanishi/rails/train_api/test.png"
     # plt.savefig(dst)
-    plt.close()  
+    plt.clf()
+    # plt.close()  
     return dst
-
 
 
 def format_graph_img(ax: matplotlib.axes._axes.Axes, xmin: np.float64, xmax: np.float64,
@@ -92,14 +94,14 @@ def predict():
     acc = list(data.keys())
     seq = list(data.values())
 
-    img_path = f"/home/nakanishi/rails/genome-img-app/app/assets/images/{acc[0]}.png"
+    #img_path = f"/home/nakanishi/rails/genome-img-app/app/assets/images/{acc[0]}.png"
 
     with open("weight.json") as f:
         weight = json.load(f)
         fig = generate_image(acc[0], seq[0], weight)
     ###train###
     model = tf.keras.models.load_model('saved_model/my_model')
-    img = cv2.imread(img_path)
+    #img = cv2.imread(img_path)
     img = cv2.cvtColor(fig, cv2.COLOR_BGR2GRAY)
     img = 1 - np.asarray(img, dtype=np.float16) / 255
     img = img.reshape(1,192,192,1)

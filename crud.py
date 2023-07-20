@@ -36,21 +36,20 @@ def generate_image(acc,
     fig = plt.figure(figsize=figsize, dpi=dpi)
     ax = fig.add_axes([0, 0, 1, 1])
 
-    # プロット画像を直接メモリで渡す
     ax.plot(x_coo, y_coo, color="black", lw=1)
     
     format_graph_img(ax, min(x_coo), max(x_coo), min(y_coo), max(y_coo))
 
-    buf = io.BytesIO() # bufferを用意
-    plt.savefig(buf, format='png') # bufferに保持
-    enc = np.frombuffer(buf.getvalue(),dtype=np.uint8) # bufferからの読み出し
-    dst = cv2.imdecode(enc, 1) # デコード
-    dst = dst[:,:,::-1] # BGR->RGB
-    # dst = "/home/nakanishi/rails/train_api/test.png"
-    # plt.savefig(dst)
-    plt.clf()
-    # plt.close()  
-    return dst
+    # buf = io.BytesIO() # bufferを用意
+    # plt.savefig(buf, format='png') # bufferに保持
+    # enc = np.frombuffer(buf.getvalue(),dtype=np.uint8) # bufferからの読み出し
+    # dst = cv2.imdecode(enc, 1) # デコード
+    # dst = dst[:,:,::-1] # BGR->RGB
+    dst = "dnaimg_tmp.png"
+    plt.savefig(dst)
+    # plt.clf()
+    plt.close()  
+    return fig
 
 
 def format_graph_img(ax: matplotlib.axes._axes.Axes, xmin: np.float64, xmax: np.float64,
@@ -94,16 +93,16 @@ def predict():
     acc = list(data.keys())
     seq = list(data.values())
 
-    #img_path = f"/home/nakanishi/rails/genome-img-app/app/assets/images/{acc[0]}.png"
+    img_path = "dnaimg_tmp.png"
 
     with open("weight.json") as f:
         weight = json.load(f)
         fig = generate_image(acc[0], seq[0], weight)
     ###train###
     model = tf.keras.models.load_model('saved_model/my_model')
-    #img = cv2.imread(img_path)
-    img = cv2.cvtColor(fig, cv2.COLOR_BGR2GRAY)
-    img = 1 - np.asarray(img, dtype=np.float16) / 255
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = 1 - np.asarray(img, dtype=np.float32) / 255
     img = img.reshape(1,192,192,1)
     predictions = model.predict(img)
 

@@ -37,7 +37,7 @@ def generate_image(acc,
     ax = fig.add_axes([0, 0, 1, 1])
 
     # プロット画像を直接メモリで渡す
-    ax.plot(x_coo, y_coo, color=black, lw=1)
+    ax.plot(x_coo, y_coo, color="black", lw=1)
     
     format_graph_img(ax, min(x_coo), max(x_coo), min(y_coo), max(y_coo))
 
